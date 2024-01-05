@@ -10,8 +10,13 @@ author: lslezak
 inputs:
   task:
     description: Rake task to run
-    required: true
     default: osc:sr
+  obs_user:
+    description: OBS user name
+    required: true
+  obs_password:
+    description: OBS password
+    required: true
 
 runs:
   using: "composite"
@@ -31,21 +36,16 @@ runs:
       shell: bash
       run: podman exec -e OBS_USER -e OBS_PASSWORD yast /action/src/configure_osc.sh
 
-    #   env:
-    #     OBS_USER:     ${{ secrets.OBS_USER }}
-    #     OBS_PASSWORD: ${{ secrets.OBS_PASSWORD }}
-
-    # - name: Run rake
-    #   id: rake
-    #   # the default timeout is 6 hours, do not wait for that long if osc gets stucked
-    #   timeout-minutes: 20
-    #   run: |
-    #     OUTFILE=$(mktemp -p '' rake_osc_sr_XXXXXXX)
-    #     # rake osc:sr | tee $OUTFILE
-    #     SR=$(grep "^created request id [0-9]+" $OUTFILE | sed -e 's/created request id //')
-    #     # pass the SR number
-    #     echo "submit=$SR" >> $GITHUB_OUTPUT
-    #     rm $OUTFILE
+    - name: Run rake
+      shell: bash
+      id: rake
+      run: |
+        OUTFILE=$(mktemp -p '' rake_osc_sr_XXXXXXX)
+        podman exec yast rake ${{ inputs.task }} | tee $OUTFILE
+        SR=$(grep "^created request id [0-9]+" $OUTFILE | sed -e 's/created request id //')
+        # pass the SR number
+        echo "submit=$SR" >> $GITHUB_OUTPUT
+        rm $OUTFILE
 
     # - name: Success status comment
     #   env:
