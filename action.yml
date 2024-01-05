@@ -24,12 +24,34 @@ runs:
   using: composite
 
   steps:
+    - name: Create cache
+      id: cache
+      shell: bash
+      run: |
+          CACHE=$(mktemp -d -p '' pkg_cache_XXXXXXX)
+          echo "path=$CACHE" >> $GITHUB_OUTPUT
+
+    - name: Cache OBS packages
+      uses: actions/cache@v3
+      with:
+        key: obs-packages-${{ github.repository }}
+        path: ${{ steps.cache.outputs.path }}
+
     - name: Start the YaST container
       shell: bash
-      run: podman run --detach --name yast -e CI -e GITHUB_ACTIONS
+      run: podman run --privileged --detach --name yast -e CI -e GITHUB_ACTIONS
+        -v /dev:/dev -v ${{ steps.cache.outputs.path }}:/var/tmp/osbuild-packagecache
         -v ${{ github.action_path }}:/action -v .:/checkout -w /checkout
         registry.opensuse.org/yast/head/containers_tumbleweed/yast-rake:latest
         tail -f /dev/null
+
+    - name: Dev
+      shell: bash
+      run: podman exec yast ls -l /dev
+
+    - name: Dev test
+      shell: bash
+      run: podman exec yast bash -c "echo > /dev/null"
 
     - name: Fix permissions to avoid git failures
       shell: bash
