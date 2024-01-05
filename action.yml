@@ -11,17 +11,21 @@ inputs:
   task:
     description: Rake task to run
     default: osc:sr
+
   obs_user:
     description: OBS user name
     required: true
+
   obs_password:
     description: OBS password
     required: true
 
 runs:
-  using: "composite"
+  using: composite
+
   steps:
-    - shell: bash
+    - name: Start the YaST container
+      shell: bash
       run: podman run --privileged --detach --name yast -e CI -e GITHUB_ACTIONS
         -v /dev:/dev -v .:/checkout -v ${{ github.action_path }}:/action
         -v /usr/bin/gh:/usr/bin/gh -w /checkout
@@ -35,6 +39,9 @@ runs:
     - name: Configure osc
       shell: bash
       run: podman exec -e OBS_USER -e OBS_PASSWORD yast /action/src/configure_osc.sh
+      env:
+        OBS_USER: ${{ inputs.obs_user }}
+        OBS_PASSWORD: ${{ inputs.obs_password }}
 
     - name: Run rake
       shell: bash
@@ -87,3 +94,7 @@ runs:
     #     else
     #       echo "Pull request not found, skipping status comment"
     #     fi
+
+    - name: Stop the YaST container
+      shell: bash
+      run: podman stop yast
