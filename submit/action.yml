@@ -27,23 +27,13 @@ runs:
     - name: Git Checkout
       uses: actions/checkout@v4
 
-    - name: Create cache
-      id: cache
+    - name: Check permissions
       shell: bash
-      run: |
-          CACHE=$(mktemp -d -p '' pkg_cache_XXXXXXX)
-          echo "path=$CACHE" >> $GITHUB_OUTPUT
-
-    - name: Cache OBS packages
-      uses: actions/cache@v3
-      with:
-        key: obs-packages-${{ github.repository }}
-        path: ${{ steps.cache.outputs.path }}
+      run: ls -l .git/config
 
     - name: Start the YaST container
       shell: bash
       run: sudo podman run --privileged --detach --name yast -e CI -e GITHUB_ACTIONS
-        -v ${{ steps.cache.outputs.path }}:/var/tmp/osbuild-packagecache
         -v ${{ github.action_path }}:/action -v .:/checkout -w /checkout
         registry.opensuse.org/yast/head/containers_tumbleweed/yast-rake:latest
         tail -f /dev/null
@@ -66,13 +56,10 @@ runs:
         OUTFILE=$(mktemp -p '' yast_rake_XXXXXXX)
         echo $OUTFILE
         sudo podman exec --privileged yast rake ${{ inputs.task }} | tee $OUTFILE
-        echo "Exit: $?"
-        ls -l $OUTFILE
         SR=$((grep "^created request id [0-9]+" $OUTFILE || true) | sed -e 's/created request id //')
         # pass the SR number
         echo "submit=$SR" >> $GITHUB_OUTPUT
         rm $OUTFILE
-        echo "Exit: $?"
 
     # - name: Cache
     #   shell: bash
