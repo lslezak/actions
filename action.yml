@@ -26,10 +26,11 @@ runs:
   steps:
     - name: Start the YaST container
       shell: bash
-      run: podman start --name yast -e CI -e GITHUB_ACTIONS
+      run: podman run --detach --name yast -e CI -e GITHUB_ACTIONS
         -v /dev:/dev -v .:/checkout -v ${{ github.action_path }}:/action
         -v /usr/bin/gh:/usr/bin/gh -w /checkout
         registry.opensuse.org/yast/head/containers_tumbleweed/yast-rake:latest
+        tail -f /dev/null
 
     - name: Fix permissions to avoid git failures
       shell: bash
