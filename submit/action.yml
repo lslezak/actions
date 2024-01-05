@@ -27,10 +27,6 @@ runs:
     - name: Git Checkout
       uses: actions/checkout@v4
 
-    - name: Check permissions
-      shell: bash
-      run: ls -l .git/config
-
     - name: Start the YaST container
       shell: bash
       run: sudo podman run --privileged --detach --name yast -e CI -e GITHUB_ACTIONS
@@ -40,7 +36,7 @@ runs:
 
     - name: Fix permissions to avoid git failures
       shell: bash
-      run: sudo podman exec yast chown -R -c 0 .
+      run: sudo podman exec yast chown -R 0 .
 
     - name: Configure osc
       shell: bash
@@ -115,3 +111,7 @@ runs:
     - name: Stop the YaST container
       shell: bash
       run: sudo podman stop yast
+
+    - name: Restore permissions
+      shell: bash
+      run: sudo chown -R runner:docker .
