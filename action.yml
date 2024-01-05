@@ -26,11 +26,10 @@ runs:
   steps:
     - name: Start the YaST container
       shell: bash
-      run: podman run --privileged --detach --name yast -e CI -e GITHUB_ACTIONS
+      run: podman start --name yast -e CI -e GITHUB_ACTIONS
         -v /dev:/dev -v .:/checkout -v ${{ github.action_path }}:/action
         -v /usr/bin/gh:/usr/bin/gh -w /checkout
         registry.opensuse.org/yast/head/containers_tumbleweed/yast-rake:latest
-        tail -f /dev/null
 
     - name: Fix permissions to avoid git failures
       shell: bash
@@ -48,7 +47,7 @@ runs:
       id: rake
       run: |
         OUTFILE=$(mktemp -p '' rake_osc_sr_XXXXXXX)
-        podman exec yast rake ${{ inputs.task }} | tee $OUTFILE
+        podman exec --privileged yast rake ${{ inputs.task }} | tee $OUTFILE
         SR=$(grep "^created request id [0-9]+" $OUTFILE | sed -e 's/created request id //')
         # pass the SR number
         echo "submit=$SR" >> $GITHUB_OUTPUT
