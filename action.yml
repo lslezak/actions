@@ -4,8 +4,14 @@
 # https://docs.github.com/en/actions/using-workflows/reusing-workflows
 
 name: OBS Autosubmission
-description: Autosubmit the sources by running the "rake osc:sr" task
+description: Autosubmit the sources by running an YaST Rake task
 author: lslezak
+
+inputs:
+  task:
+    description: Rake task to run
+    required: true
+    default: osc:sr
 
 runs:
   using: "composite"
@@ -23,7 +29,7 @@ runs:
 
     - name: Configure osc
       shell: bash
-      run: podman exec yast /action/src/configure_osc.sh
+      run: podman exec -e OBS_USER -e OBS_PASSWORD yast /action/src/configure_osc.sh
 
     #   env:
     #     OBS_USER:     ${{ secrets.OBS_USER }}
