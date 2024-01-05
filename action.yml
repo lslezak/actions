@@ -24,6 +24,9 @@ runs:
   using: composite
 
   steps:
+    - name: Git Checkout
+      uses: actions/checkout@v4
+
     - name: Create cache
       id: cache
       shell: bash
